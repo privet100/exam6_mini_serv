@@ -16,28 +16,23 @@ int         maxfd = 0, gid = 0;
 char        send_buffer[300000], recv_buffer[300000];
 
 void err(char  *msg) {
-    if (msg)
-        write(2, msg, strlen(msg));
-    else
-        write(2, "Fatal error", 11);
-    write(2, "\n", 1);
+    write(2, msg, strlen(msg));
     exit(1);
 }
 
 void send_to_all(int except) {
     for (int fd = 0; fd <= maxfd; fd++) {
         if  (FD_ISSET(fd, &write_set) && fd != except && send(fd, send_buffer, strlen(send_buffer), 0) == -1)
-                err(NULL);
+                err("Fatal error\n");
     }
 }
 
 int main(int ac, char **av) {
-    if (ac != 2) err("Wrong number of arguments");
+    if (ac != 2) err("Wrong number of arguments\n");
 
     struct sockaddr_in  serveraddr;
     socklen_t           len;
-    int servfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (servfd == -1) err(NULL);
+    int servfd = socket(AF_INET, SOCK_STREAM, 0); if (servfd == -1) err("Fatal error\n");
     maxfd = servfd;
 
     FD_ZERO(&cur_set);
@@ -49,8 +44,7 @@ int main(int ac, char **av) {
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serveraddr.sin_port = htons(atoi(av[1]));
 
-    if (bind(servfd, (const struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1 || listen(servfd, 100) == -1)
-        err(NULL);
+    if (bind(servfd, (const struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1 || listen(servfd, 100) == -1) err("Fatal error\n");
 
     while (1) {
         read_set = write_set = cur_set;
