@@ -14,6 +14,7 @@ t_client    clis[1024];
 fd_set      read_set, write_set, cur_set;
 int         maxfd = 0, gid = 0;
 char        send_buffer[300000], recv_buffer[300000];
+socklen_t           len;
 
 void err(char  *msg) {
     write(2, msg, strlen(msg));
@@ -21,16 +22,14 @@ void err(char  *msg) {
 }
 
 void send_to_all(int sender) {
-    for (int fd = 0; fd <= maxfd; fd++) {
+    for (int fd = 0; fd <= maxfd; fd++)
         if  (FD_ISSET(fd, &write_set) && fd != sender && send(fd, send_buffer, strlen(send_buffer), 0) == -1) err("Fatal error\n");
-    }
 }
 
 int main(int ac, char **av) {
     if (ac != 2) err("Wrong number of arguments\n");
 
     struct sockaddr_in  serveraddr = {0};
-    socklen_t           len;
     int servfd = socket(AF_INET, SOCK_STREAM, 0); if (servfd == -1) err("Fatal error\n");
     maxfd = servfd;
 
