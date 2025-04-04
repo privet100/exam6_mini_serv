@@ -5,8 +5,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-typedef struct s_client
-{
+typedef struct s_client {
     int     id;
     char    msg[290000];
 }   t_client;
@@ -16,8 +15,7 @@ fd_set      read_set, write_set, current;
 int         maxfd = 0, gid = 0;
 char        send_buffer[300000], recv_buffer[300000];
 
-void    err(char  *msg)
-{
+void err(char  *msg) {
     if (msg)
         write(2, msg, strlen(msg));
     else
@@ -26,20 +24,16 @@ void    err(char  *msg)
     exit(1);
 }
 
-void    send_to_all(int except)
-{
-    for (int fd = 0; fd <= maxfd; fd++)
-    {
+void send_to_all(int except) {
+    for (int fd = 0; fd <= maxfd; fd++) {
         if  (FD_ISSET(fd, &write_set) && fd != except)
             if (send(fd, send_buffer, strlen(send_buffer), 0) == -1)
                 err(NULL);
     }
 }
 
-int     main(int ac, char **av)
-{
-    if (ac != 2)
-        err("Wrong number of arguments");
+int main(int ac, char **av) {
+    if (ac != 2) err("Wrong number of arguments");
 
     struct sockaddr_in  serveraddr;
     socklen_t           len;
@@ -59,8 +53,7 @@ int     main(int ac, char **av)
     if (bind(serverfd, (const struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1 || listen(serverfd, 100) == -1)
         err(NULL);
 
-    while (1)
-    {
+    while (1) {
         read_set = write_set = current;
         if (select(maxfd + 1, &read_set, &write_set, 0, 0) == -1) continue;
 
