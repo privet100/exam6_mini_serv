@@ -26,8 +26,7 @@ void err(char  *msg) {
 
 void send_to_all(int except) {
     for (int fd = 0; fd <= maxfd; fd++) {
-        if  (FD_ISSET(fd, &write_set) && fd != except)
-            if (send(fd, send_buffer, strlen(send_buffer), 0) == -1)
+        if  (FD_ISSET(fd, &write_set) && fd != except && send(fd, send_buffer, strlen(send_buffer), 0) == -1)
                 err(NULL);
     }
 }
@@ -56,7 +55,6 @@ int main(int ac, char **av) {
     while (1) {
         read_set = write_set = current;
         if (select(maxfd + 1, &read_set, &write_set, 0, 0) == -1) continue;
-
         for (int fd = 0; fd <= maxfd; fd++) {
             if (FD_ISSET(fd, &read_set)) {
                 if (fd == serverfd) {
