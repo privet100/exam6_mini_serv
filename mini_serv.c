@@ -10,8 +10,8 @@ typedef struct s_client {
     char    msg[290000];
 }   t_client;
 
-t_client    clients[1024];
-fd_set      read_set, write_set, current;
+t_client    clis[1024];
+fd_set      read_set, write_set, cur_set;
 int         maxfd = 0, gid = 0;
 char        send_buffer[300000], recv_buffer[300000];
 
@@ -36,53 +36,53 @@ int main(int ac, char **av) {
 
     struct sockaddr_in  serveraddr;
     socklen_t           len;
-    int serverfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverfd == -1) err(NULL);
-    maxfd = serverfd;
+    int servfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (servfd == -1) err(NULL);
+    maxfd = servfd;
 
-    FD_ZERO(&current);
-    FD_SET(serverfd, &current);
-    bzero(clients, sizeof(clients));
+    FD_ZERO(&cur_set);
+    FD_SET(servfd, &cur_set);
+    bzero(clis, sizeof(clis));
     bzero(&serveraddr, sizeof(serveraddr));
 
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
     serveraddr.sin_port = htons(atoi(av[1]));
 
-    if (bind(serverfd, (const struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1 || listen(serverfd, 100) == -1)
+    if (bind(servfd, (const struct sockaddr *)&serveraddr, sizeof(serveraddr)) == -1 || listen(servfd, 100) == -1)
         err(NULL);
 
     while (1) {
-        read_set = write_set = current;
+        read_set = write_set = cur_set;
         if (select(maxfd + 1, &read_set, &write_set, 0, 0) == -1) continue;
         for (int fd = 0; fd <= maxfd; fd++) {
             if (FD_ISSET(fd, &read_set)) {
-                if (fd == serverfd) {
-                    int clientfd = accept(serverfd, (struct sockaddr *)&serveraddr, &len);
-                    if (clientfd == -1) continue;
-                    if (clientfd > maxfd) maxfd = clientfd;
-                    clients[clientfd].id = gid++;
-                    FD_SET(clientfd, &current);
-                    sprintf(send_buffer, "server: client %d just arrived\n", clients[clientfd].id);
-                    send_to_all(clientfd);
+                if (fd == servfd) {
+                    int clifd = accept(servfd, (struct sockaddr *)&serveraddr, &len);
+                    if (clifd == -1) continue;
+                    if (clifd > maxfd) maxfd = clifd;
+                    clis[clifd].id = gid++;
+                    FD_SET(clifd, &cur_set);
+                    sprintf(send_buffer, "server: client %d just arrived\n", clis[clifd].id);
+                    send_to_all(clifd);
                 }
                 else {
                     int ret = recv(fd, recv_buffer, sizeof(recv_buffer), 0);
                     if (ret <= 0) {
-                        sprintf(send_buffer, "server: client %d just left\n", clients[fd].id);
+                        sprintf(send_buffer, "server: client %d just left\n", clis[fd].id);
                         send_to_all(fd);
-                        FD_CLR(fd, &current);
+                        FD_CLR(fd, &cur_set);
                         close(fd);
-                        bzero(clients[fd].msg, strlen(clients[fd].msg));
+                        bzero(clis[fd].msg, strlen(clis[fd].msg));
                     }
                     else {
-                        for (int i = 0, j = strlen(clients[fd].msg); i < ret; i++, j++) {
-                            clients[fd].msg[j] = recv_buffer[i];
-                            if (clients[fd].msg[j] == '\n') {
-                                clients[fd].msg[j] = '\0';
-                                sprintf(send_buffer, "client %d: %s\n", clients[fd].id, clients[fd].msg);
+                        for (int i = 0, j = strlen(clis[fd].msg); i < ret; i++, j++) {
+                            clis[fd].msg[j] = recv_buffer[i];
+                            if (clis[fd].msg[j] == '\n') {
+                                clis[fd].msg[j] = '\0';
+                                sprintf(send_buffer, "client %d: %s\n", clis[fd].id, clis[fd].msg);
                                 send_to_all(fd);
-                                bzero(clients[fd].msg, strlen(clients[fd].msg));
+                                bzero(clis[fd].msg, strlen(clis[fd].msg));
                                 j = -1;
                             }
                         }
