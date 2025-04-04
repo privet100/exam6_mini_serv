@@ -20,9 +20,9 @@ void err(char  *msg) {
     exit(1);
 }
 
-void send_to_all(int except) {
+void send_to_all(int sender) {
     for (int fd = 0; fd <= maxfd; fd++) {
-        if  (FD_ISSET(fd, &write_set) && fd != except && send(fd, send_buffer, strlen(send_buffer), 0) == -1) err("Fatal error\n");
+        if  (FD_ISSET(fd, &write_set) && fd != sender && send(fd, send_buffer, strlen(send_buffer), 0) == -1) err("Fatal error\n");
     }
 }
 
@@ -67,7 +67,7 @@ int main(int ac, char **av) {
                         close(fd);
                         bzero(clis[fd].msg, strlen(clis[fd].msg));
                     }
-                    else {
+                    else
                         for (int i = 0, j = strlen(clis[fd].msg); i < ret; i++, j++) {
                             clis[fd].msg[j] = recv_buffer[i];
                             if (clis[fd].msg[j] == '\n') {
@@ -78,7 +78,6 @@ int main(int ac, char **av) {
                                 j = -1;
                             }
                         }
-                    }
                 }
                 break;
             }
