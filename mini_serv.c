@@ -57,14 +57,10 @@ int main(int ac, char **av) {
         read_set = write_set = current;
         if (select(maxfd + 1, &read_set, &write_set, 0, 0) == -1) continue;
 
-        for (int fd = 0; fd <= maxfd; fd++)
-        {
-            if (FD_ISSET(fd, &read_set))
-            {
-                if (fd == serverfd)
-                {
+        for (int fd = 0; fd <= maxfd; fd++) {
+            if (FD_ISSET(fd, &read_set)) {
+                if (fd == serverfd) {
                     int clientfd = accept(serverfd, (struct sockaddr *)&serveraddr, &len);
-                    
                     if (clientfd == -1) continue;
                     if (clientfd > maxfd) maxfd = clientfd;
                     clients[clientfd].id = gid++;
@@ -72,24 +68,19 @@ int main(int ac, char **av) {
                     sprintf(send_buffer, "server: client %d just arrived\n", clients[clientfd].id);
                     send_to_all(clientfd);
                 }
-                else
-                {
+                else {
                     int ret = recv(fd, recv_buffer, sizeof(recv_buffer), 0);
-                    if (ret <= 0)
-                    {
+                    if (ret <= 0) {
                         sprintf(send_buffer, "server: client %d just left\n", clients[fd].id);
                         send_to_all(fd);
                         FD_CLR(fd, &current);
                         close(fd);
                         bzero(clients[fd].msg, strlen(clients[fd].msg));
                     }
-                    else
-                    {
-                        for (int i = 0, j = strlen(clients[fd].msg); i < ret; i++, j++)
-                        {
+                    else {
+                        for (int i = 0, j = strlen(clients[fd].msg); i < ret; i++, j++) {
                             clients[fd].msg[j] = recv_buffer[i];
-                            if (clients[fd].msg[j] == '\n')
-                            {
+                            if (clients[fd].msg[j] == '\n') {
                                 clients[fd].msg[j] = '\0';
                                 sprintf(send_buffer, "client %d: %s\n", clients[fd].id, clients[fd].msg);
                                 send_to_all(fd);
