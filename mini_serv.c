@@ -22,15 +22,14 @@ void err(char  *msg) {
 
 void send_to_all(int except) {
     for (int fd = 0; fd <= maxfd; fd++) {
-        if  (FD_ISSET(fd, &write_set) && fd != except && send(fd, send_buffer, strlen(send_buffer), 0) == -1)
-                err("Fatal error\n");
+        if  (FD_ISSET(fd, &write_set) && fd != except && send(fd, send_buffer, strlen(send_buffer), 0) == -1) err("Fatal error\n");
     }
 }
 
 int main(int ac, char **av) {
     if (ac != 2) err("Wrong number of arguments\n");
 
-    struct sockaddr_in  serveraddr;
+    struct sockaddr_in  serveraddr = {0};
     socklen_t           len;
     int servfd = socket(AF_INET, SOCK_STREAM, 0); if (servfd == -1) err("Fatal error\n");
     maxfd = servfd;
@@ -38,7 +37,6 @@ int main(int ac, char **av) {
     FD_ZERO(&cur_set);
     FD_SET(servfd, &cur_set);
     bzero(clis, sizeof(clis));
-    bzero(&serveraddr, sizeof(serveraddr));
 
     serveraddr.sin_family = AF_INET;
     serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);
