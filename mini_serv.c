@@ -40,34 +40,33 @@ int main(int ac, char **av) {
         setRcv = setSnd = setCur;
         if (select(fdM + 1, &setRcv, &setSnd, 0, 0) == -1) continue;
         for (int fd = 0; fd <= fdM; fd++) {
-            if (FD_ISSET(fd, &setRcv)) {
-                if (FD_ISSET(fd, &setRcv) && fd == fdS) {
-                    fdC = accept(fdS, (struct sockaddr *)&adrSrv, &len); if (fdC == -1) continue; if (fdC > fdM) fdM = fdC;
-                    cli[fdC].id = gid++;
-                    FD_SET(fdC, &setCur);
-                    sprintf(bufSnd, "server: client %d just arrived\n", cli[fdC].id); send_to_all(fdC);
-                }
-                else if (FD_ISSET(fd, &setRcv) && fd != fdS) {
-                    int ret = recv(fd, bufRcv, sizeof(bufRcv), 0);
-                    if (ret <= 0) {
-                        sprintf(bufSnd, "server: client %d just left\n", cli[fd].id); send_to_all(fd);
-                        FD_CLR(fd, &setCur);
-                        close(fd);
-                        memset(cli[fd].msg, 0, sizeof(cli[fd].msg));
-                    } else {
-                        for (int i = 0, j = strlen(cli[fd].msg); i < ret; i++, j++) {
-                            cli[fd].msg[j] = bufRcv[i];
-                            if (cli[fd].msg[j] == '\n') {
-                                cli[fd].msg[j] = '\0';
-                                sprintf(bufSnd, "client %d: %s\n", cli[fd].id, cli[fd].msg); send_to_all(fd);
-                                memset(cli[fd].msg, 0, sizeof(cli[fd].msg));
-                                j = -1;
-                            }
+            if (FD_ISSET(fd, &setRcv) && fd == fdS) {
+                fdC = accept(fdS, (struct sockaddr *)&adrSrv, &len); if (fdC == -1) continue; if (fdC > fdM) fdM = fdC;
+                cli[fdC].id = gid++;
+                FD_SET(fdC, &setCur);
+                sprintf(bufSnd, "server: client %d just arrived\n", cli[fdC].id); send_to_all(fdC);
+            }
+            if (FD_ISSET(fd, &setRcv) && fd != fdS) {
+                int ret = recv(fd, bufRcv, sizeof(bufRcv), 0);
+                if (ret <= 0) {
+                    sprintf(bufSnd, "server: client %d just left\n", cli[fd].id); send_to_all(fd);
+                    FD_CLR(fd, &setCur);
+                    close(fd);
+                    memset(cli[fd].msg, 0, sizeof(cli[fd].msg));
+                } else {
+                    for (int i = 0, j = strlen(cli[fd].msg); i < ret; i++, j++) {
+                        cli[fd].msg[j] = bufRcv[i];
+                        if (cli[fd].msg[j] == '\n') {
+                            cli[fd].msg[j] = '\0';
+                            sprintf(bufSnd, "client %d: %s\n", cli[fd].id, cli[fd].msg); send_to_all(fd);
+                            memset(cli[fd].msg, 0, sizeof(cli[fd].msg));
+                            j = -1;
                         }
                     }
                 }
-                break;
             }
+            if (FD_ISSET(fd, &setRcv))
+                break;
         }
     }
     return (0);
