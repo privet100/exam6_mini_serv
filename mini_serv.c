@@ -47,7 +47,7 @@ int main(int ac, char **av) {
                     FD_SET(fdC, &setCur);
                     sprintf(bufSnd, "server: client %d just arrived\n", cli[fdC].id); send_to_all(fdC);
                 }
-                else if (FD_ISSET(fd, &setRcv) && fd != fdS) {
+                if (FD_ISSET(fd, &setRcv) && fd != fdS) {
                     int ret = recv(fd, bufRcv, sizeof(bufRcv), 0);
                     if (ret <= 0) {
                         sprintf(bufSnd, "server: client %d just left\n", cli[fd].id); send_to_all(fd);
